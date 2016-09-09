@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+android:orientation="vertical"
+android:layout_width="match_parent"
+android:layout_height="match_parent"
+android:padding="20dp"
+android:minWidth="300dp"
+    android:weightSum="1"
+    android:background="#ffffff">
+
+    <TextView
+    android:id="@+id/folder"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content" />
+
+<ListView
+    android:id="@+id/listViewLista"
+    android:layout_width="match_parent"
+    android:layout_height="336dp"
+    android:layout_weight="0.26"
+    android:layout_above="@+id/btnAddImage"
+    android:layout_below="@+id/etInputSearch">
+</ListView>
+
+    <Button
+        style="?android:attr/buttonStyleSmall"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Añadir signo"
+        android:id="@+id/btnAddImage"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentStart="true"
+        android:background="#2356ea"
+        android:textColor="#ffffff" />
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/imageView"
+        android:src="@drawable/csign"
+        android:layout_marginLeft="0dp"
+        android:layout_marginRight="0dp"
+        android:layout_alignBottom="@+id/folder"
+        android:layout_alignParentStart="true" />
+
+    <EditText
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/etInputSearch"
+        android:layout_below="@+id/imageView"
+        android:layout_alignParentEnd="true"
+        android:hint="@string/introduce_palabra" />
+
+</RelativeLayout>

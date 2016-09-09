@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">ComunitySign</string>
+    
+    <string name="action_settings">Creditos</string>
+    <string name="introduce_palabra">Introduce palabra a buscar...</string>
+    <string name="vibration_mode_on">Vibración: ON</string>
+    <string name="vibration_mode_off">Vibración: OFF</string>
+</resources>

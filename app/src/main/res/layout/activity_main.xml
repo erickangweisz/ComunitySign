@@ -1,0 +1,74 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
+    android:layout_height="match_parent" android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    android:paddingBottom="@dimen/activity_vertical_margin" tools:context=".MainActivity"
+    android:background="#ffffff">
+
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/ivResult"
+        android:layout_alignParentStart="true"
+        android:src="@drawable/csign"
+        android:layout_above="@+id/etSearch"
+        android:layout_below="@+id/tvResult" />
+
+    <EditText
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/etSearch"
+        android:inputType="text"
+        android:layout_above="@+id/btnMicro"
+        android:layout_alignParentStart="true" />
+
+    <ImageButton
+        android:layout_width="130dp"
+        android:layout_height="130dp"
+        android:id="@+id/btnMicro"
+        android:layout_centerHorizontal="true"
+        android:layout_alignParentBottom="true"
+        android:padding="5dp"
+        android:background="#ffffff"
+        android:scaleType="fitCenter"
+        android:layout_marginLeft="20dp"
+        android:layout_marginRight="20dp"
+        android:src="@drawable/btn_microphone" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:id="@+id/tvResult"
+        android:layout_alignParentStart="true"
+        android:layout_alignEnd="@+id/ivResult"
+        android:gravity="center_horizontal"
+        android:capitalize="words"
+        android:inputType="text"
+        android:textStyle="bold"
+        android:textColor="#2356ea" />
+
+    <ImageButton
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:id="@+id/btnListadoSignos"
+        android:scaleType="fitXY"
+        android:background="#ffffff"
+        android:layout_alignTop="@+id/btnMicro"
+        android:layout_toStartOf="@+id/btnMicro"
+        android:layout_marginTop="41dp"
+        android:src="@drawable/btn_library" />
+
+    <ImageButton
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:id="@+id/btnDactilologico"
+        android:scaleType="fitXY"
+        android:background="#ffffff"
+        android:layout_alignTop="@+id/btnListadoSignos"
+        android:layout_toEndOf="@+id/btnMicro"
+        android:src="@drawable/btn_dactilologico" />
+
+
+</RelativeLayout>
