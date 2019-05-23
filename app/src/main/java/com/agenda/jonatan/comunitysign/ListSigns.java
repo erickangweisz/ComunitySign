@@ -152,7 +152,7 @@ public class ListSigns extends Activity {
 
     // Eliminamos el elemento de la base de datos y del archivo xml.
     public void deleteImage() {
-        MainActivity.db.delete(MainActivity.TABLE_NAME, MainActivity.KEY_ID + "=" + (ListSigns.pos_list + 1), null);
+        MainActivity.database.delete(MainActivity.TABLE_NAME, MainActivity.KEY_ID + "=" + (ListSigns.pos_list + 1), null);
 
         preferences = getSharedPreferences(ListSigns.NOMBRE_PREF, MODE_PRIVATE);
 
@@ -180,7 +180,7 @@ public class ListSigns extends Activity {
 
             imageName = etImageName.getText().toString();
 
-            MainActivity.saveImage(imagePath, imageName); // Guarda la imagen seleccionada y el nombre en la BD.
+            MainActivity.InsertDefaultImagesIntoDataBase(imagePath, imageName); // Guarda la imagen seleccionada y el nombre en la BD.
             MainActivity.image_name_string.add(imageName); // Guarda la String en el ArrayList de palabras para el ListView.
 
             // Obtener el objeto SharedPreferences object

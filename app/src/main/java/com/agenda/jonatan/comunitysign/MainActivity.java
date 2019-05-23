@@ -38,7 +38,7 @@ import butterknife.ButterKnife;
 
 public class MainActivity extends AppCompatActivity {
 
-    public static SQLiteDatabase db;
+    public static SQLiteDatabase database;
     @Bind(R.id.ivResult)
     ImageView ivResult;
     @Bind(R.id.etSearch)
@@ -56,16 +56,17 @@ public class MainActivity extends AppCompatActivity {
     public static final String KEY_ID = "id_image";
     public static final String KEY_NAME = "image_name";
     public static final String KEY_IMAGE = "path_image";
+    public static final Integer IS_CORRECT = 100;
 
-    private Bitmap bmp;
+    private Bitmap bitmap;
 
-    private static final char[] ORIGINAL = {'á', 'é', 'í', 'ó', 'ú', 'Á', 'É', 'Í', 'Ó', 'Ú'};
-    private static final char[] SUSTITUCION = {'a', 'e', 'i', 'o', 'u', 'A', 'E', 'I', 'O', 'U'};
+    private static final char[] CHARS_WITH_TILDE = {'á', 'é', 'í', 'ó', 'ú', 'Á', 'É', 'Í', 'Ó', 'Ú'};
+    private static final char[] CHARS_WITHOUT_TILDE = {'a', 'e', 'i', 'o', 'u', 'A', 'E', 'I', 'O', 'U'};
 
     public static String[] image_name_string_default = new String[664]; // COLECCIÓN QUE GUARDA LOS NOMBRES DE LAS IMAGENES POR DEFECTO.
     public static ArrayList<String> image_name_string = new ArrayList<>(); // INTRODUCIDAS POR EL USUARIO + POR DEFECTO.
 
-    private String palabra = "";
+    private String wordFound = "";
 
     public static ContentValues values;
 
@@ -81,7 +82,7 @@ public class MainActivity extends AppCompatActivity {
         etSearch.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-                getImageByEtSearch();
+                showImageFoundOnImageViewObtainedFromEtSearch();
                 tvResult.setText(etSearch.getText().toString().toUpperCase());
                 return false;
             }
@@ -111,10 +112,10 @@ public class MainActivity extends AppCompatActivity {
                 vb = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
                 if (isActivatedVibration)
                     vb.vibrate(80);
-                String nombre = "dagtilologico";
-                String recurso = "drawable";
+                String dagtilologicalText = "dagtilologico";
+                String resource = "drawable";
 
-                int res_image = getResources().getIdentifier(nombre, recurso, getPackageName());
+                int res_image = getResources().getIdentifier(dagtilologicalText, resource, getPackageName());
                 if (ivResult.getDrawable() == null)
                     ivResult.setImageResource(res_image);
                 else
@@ -125,7 +126,8 @@ public class MainActivity extends AppCompatActivity {
         loadDefaultArray();
         createOrOpenDB();
         loadListDefault();
-        insertDefaultData();
+        if (dataBaseIsEmpty())
+            InsertDefaultImagesIntoDataBase();
     }
 
     @Override
@@ -157,7 +159,7 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    // Devuelve la palabra filtrandole la extension.
+    // Devuelve la wordFound filtrandole la extension.
     private String methodSubstring(String str) {
         String newstr = "";
         if (str.contains("."))
@@ -168,13 +170,13 @@ public class MainActivity extends AppCompatActivity {
 
     // Entra en la base de datos, si no existe, la crea.
     private void createOrOpenDB() {
-        db = this.openOrCreateDatabase("comunitysign.db", Context.MODE_PRIVATE, null);
+        database = this.openOrCreateDatabase("comunitysign.database", Context.MODE_PRIVATE, null);
 
         String CREATE_TABLE_SIGN = "CREATE TABLE if not exists " + TABLE_NAME + "("
                 + KEY_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " + KEY_NAME + " TEXT, "
                 + KEY_IMAGE + " BLOB" + ")";
 
-        db.execSQL(CREATE_TABLE_SIGN);
+        database.execSQL(CREATE_TABLE_SIGN);
     }
 
     // Carga la lista por defecto si no hay añadidas, si las hay, llama al método loadList.
@@ -225,7 +227,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     // Guarda las imagenes en la BD.
-    public void saveImage() {
+    public void InsertDefaultImagesIntoDataBase() {
         try {
             AssetManager assetManager = getAssets();
             for (int i = 0; i < image_name_string.size(); i++) {
@@ -236,7 +238,7 @@ public class MainActivity extends AppCompatActivity {
                 values = new ContentValues();
                 values.put(KEY_NAME, image_name_string.get(i));
                 values.put(KEY_IMAGE, image);
-                db.insert(TABLE_NAME, null, values);
+                database.insert(TABLE_NAME, null, values);
 
                 is.close();
             }
@@ -247,118 +249,103 @@ public class MainActivity extends AppCompatActivity {
     }
 
     // Guarda la imagen en la BD en base a una ruta y un nombre que recoge como parámetros.
-    public static void saveImage(String imagePath, String imageName) {
+    public static void InsertDefaultImagesIntoDataBase(String imagePath, String imageName) {
         try {
-            FileInputStream fis = new FileInputStream(imagePath);
-            byte[] image = new byte[fis.available()];
-            fis.read(image);
+            FileInputStream fileInputStream = new FileInputStream(imagePath);
+            byte[] imageInBytes = new byte[fileInputStream.available()];
+            fileInputStream.read(imageInBytes);
             ContentValues values = new ContentValues();
             values.put(KEY_NAME, imageName);
-            values.put(KEY_IMAGE, image);
-            db.insert(TABLE_NAME, null, values);
+            values.put(KEY_IMAGE, imageInBytes);
+            database.insert(TABLE_NAME, null, values);
 
-            fis.close();
+            fileInputStream.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    // Obtienes lo que recogemos del EditText y lo lanzamos al ImageView.
-    public void getImageByMicro() {
-        palabra = tvResult.getText().toString().toLowerCase();
-        String imageName = checkImage(palabra);
-        Cursor cursor = db.rawQuery("select * from " + TABLE_NAME + " where " + KEY_NAME + " = " + "'" + imageName + "'", null);
-        if (cursor.moveToNext()) {
-            byte[] image = cursor.getBlob(2);
-            bmp = BitmapFactory.decodeByteArray(image, 0, image.length);
-            ivResult.setImageBitmap(bmp);
+    public void showImageFoundOnImageView() {
+        wordFound = tvResult.getText().toString().toLowerCase();
+        String wordWithoutSpecialCharacters = replaceSpecialCharactersOfaWord(wordFound);
+        Cursor databaseCursor = database.rawQuery("select * from " + TABLE_NAME + " where " + KEY_NAME + " = " + "'" + wordWithoutSpecialCharacters + "'", null);
+        if (databaseCursor.moveToNext()) {
+            byte[] imageInBytes = databaseCursor.getBlob(2);
+            bitmap = BitmapFactory.decodeByteArray(imageInBytes, 0, imageInBytes.length);
+            ivResult.setImageBitmap(bitmap);
             Toast.makeText(this, "select success", Toast.LENGTH_LONG).show();
         } else {
-            loadSearchImageError();
+            showImageNotFound();
         }
     }
 
-    // carga la imagen de error que se encuentra en drawable en el imageview.
-    private void loadSearchImageError() {
+    private void showImageNotFound() {
         ivResult.setImageResource(R.drawable.file_not_found);
     }
 
-    // Muestra la imagen en el ImageView obtenida la entrada por el editText del usuario
-    public void getImageByEtSearch() {
-        palabra = etSearch.getText().toString().toLowerCase();
-        String imageName = checkImage(palabra);
-        Cursor cursor = db.rawQuery("select * from " + TABLE_NAME + " where " + KEY_NAME + " = " + "'" + imageName + "'", null);
-        if (cursor.moveToNext()) {
-            byte[] image = cursor.getBlob(2);
-            bmp = BitmapFactory.decodeByteArray(image, 0, image.length);
-            ivResult.setImageBitmap(bmp);
+    public void showImageFoundOnImageViewObtainedFromEtSearch() {
+        wordFound = etSearch.getText().toString().toLowerCase();
+        String imageName = replaceSpecialCharactersOfaWord(wordFound);
+        Cursor dataBaseCursor = database.rawQuery("select * from " + TABLE_NAME + " where " + KEY_NAME + " = " + "'" + imageName + "'", null);
+        if (dataBaseCursor.moveToNext()) {
+            byte[] imageInBytes = dataBaseCursor.getBlob(2);
+            bitmap = BitmapFactory.decodeByteArray(imageInBytes, 0, imageInBytes.length);
+            ivResult.setImageBitmap(bitmap);
             Toast.makeText(this, "select success", Toast.LENGTH_LONG).show();
         } else {
-            loadSearchImageError();
+            showImageNotFound();
         }
     }
 
-    // Si la base de datos está vacia, inserta los datos por defecto.
-    public void insertDefaultData() {
-        if (DBisEmpty())
-            saveImage();
+    private boolean dataBaseIsEmpty() {
+        String countRegistersFromDataBase = "SELECT count(*) FROM " + TABLE_NAME;
+        Cursor dataBaseCursor = database.rawQuery(countRegistersFromDataBase, null);
+        dataBaseCursor.moveToFirst();
+
+        int numberOfRegisters = dataBaseCursor.getInt(0);
+
+        if (numberOfRegisters == 0) return true;
+        else return false;
     }
 
-    // Comprueba si la tabla contiene registros.
-    private boolean DBisEmpty() {
-        String count = "SELECT count(*) FROM " + TABLE_NAME;
-        Cursor mcursor = db.rawQuery(count, null);
-        mcursor.moveToFirst();
-        int icount = mcursor.getInt(0);
-        if (icount == 0)
-            return true;
-        else
-            return false;
-    }
-
-    // Intent del micrófono.
     public void promptSpeechInput() {
-        Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
-        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault());
-        intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "Dí algo!");
+        Intent recognizeSpeechIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+        recognizeSpeechIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+        recognizeSpeechIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault());
+        recognizeSpeechIntent.putExtra(RecognizerIntent.EXTRA_PROMPT, "Dí algo!");
 
         try {
-            startActivityForResult(intent, 100);
+            startActivityForResult(recognizeSpeechIntent, IS_CORRECT);
         } catch (ActivityNotFoundException ex) {
-            Toast.makeText(MainActivity.this, "Sorry! your device doesn't support speech language!", Toast.LENGTH_LONG).show();
+            Toast.makeText(MainActivity.this, "Lo sentimos! tu dispositivo no es compatible con el lenguaje hablado.", Toast.LENGTH_LONG).show();
         }
     }
 
-    // Controla el Intent del micrófono, donde almacenamos lo obtenido en una colección.
+    // Controla el Intent del micrófono y almacenamos lo obtenido en una colección.
     public void onActivityResult(int request_code, int result_code, Intent intent) {
         super.onActivityResult(request_code, result_code, intent);
 
-        switch (request_code) {
-            case 100:
-                if (result_code == RESULT_OK && intent != null) {
-                    ArrayList<String> result = intent.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
-                    tvResult.setText(result.get(0).toUpperCase());
-                    palabra = checkImage(result.get(0).toLowerCase());
-                    getImageByMicro();
-                    etSearch.setText("");
-                }
-                break;
+        if (request_code == IS_CORRECT && result_code == RESULT_OK && intent != null) {
+            ArrayList<String> capturedSpeech = intent.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+            tvResult.setText(capturedSpeech.get(0).toUpperCase());
+            wordFound = replaceSpecialCharactersOfaWord(capturedSpeech.get(0).toLowerCase());
+            showImageFoundOnImageView();
+            etSearch.setText("");
         }
     }
 
-    // Limpia el parámetro que le pasas de caracteres especiales.
-    private String checkImage(String nombre) {
-        for (int i = 0; i < nombre.length(); i++) {
-            for (int j = 0; j < ORIGINAL.length; j++) {
-                if (nombre.charAt(i) == ORIGINAL[j])
-                    nombre = nombre.replace(ORIGINAL[j], SUSTITUCION[j]);
-                else if (nombre.charAt(i) == ' ')
-                    nombre = nombre.replace(' ', '_');
-                else if (nombre.charAt(i) == 'ñ')
-                    nombre = nombre.replace('ñ', 'n');
+    private String replaceSpecialCharactersOfaWord(String word) {
+        for (int i = 0; i < word.length(); i++) {
+            for (int j = 0; j < CHARS_WITH_TILDE.length; j++) {
+                if (word.charAt(i) == CHARS_WITH_TILDE[j])
+                    word = word.replace(CHARS_WITH_TILDE[j], CHARS_WITHOUT_TILDE[j]);
+                else if (word.charAt(i) == ' ')
+                    word = word.replace(' ', '_');
+                else if (word.charAt(i) == 'ñ')
+                    word = word.replace('ñ', 'n');
             }
         }
-        return nombre;
+        return word;
     }
+
 }
